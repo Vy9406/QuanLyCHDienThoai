@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Phone Store</title>
+    <link rel="stylesheet" href="assets/css/style.css?v=3">
+</head>
+<body>
+    <nav>
+        <a href="#" class="nav-brand">📱 PhoneStore</a>
+        <div class="nav-links">
+            <input type="text" id="search-input" class="search-bar" placeholder="Tìm kiếm iPhone, Samsung...">
+            <button class="btn" id="theme-toggle">🌓 Theme</button>
+            <button class="btn btn-primary" id="cart-btn">🛒 Giỏ hàng (<span id="cart-badge">0</span>)</button>
+            <!-- Auth Buttons -->
+            <button class="btn" id="login-btn" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập</button>
+            <div id="user-profile" style="display:none; align-items:center; gap:10px;">
+                <a href="profile.html" id="user-greeting" style="font-weight:600; text-decoration:none; color:var(--text-main); cursor:pointer;"></a>
+                <button class="btn" onclick="logoutCustomer()">Đăng xuất</button>
+            </div>
+            <a href="admin.html" class="btn" style="border-left: 1px solid var(--border-color); padding-left: 20px; margin-left: 10px;">Admin</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <div class="hero">
+        <h1>Khám Phá Kỷ Nguyên <br><span>Công Nghệ Mới</span></h1>
+        <p>Tuyển tập những siêu phẩm điện thoại thông minh đẳng cấp nhất năm 2026. Mua sắm thông minh, bảo hành chính hãng.</p>
+    </div>
+
+    <div class="container">
+        <!-- Flash Sale Banner -->
+        <div class="flash-sale-banner" id="flash-sale-banner">
+            <div class="flash-title">⚡ SĂN SALE GIỜ VÀNG</div>
+            <div class="flash-timer" id="flash-timer">Kết thúc sau: <span>02</span>:<span>45</span>:<span>30</span></div>
+        </div>
+        
+        <h2 style="font-size: 2rem; margin-bottom: 40px; text-align:center;">Sản Phẩm Nổi Bật</h2>
+        <div class="product-grid" id="product-grid">
+            <!-- Products will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Login/Register Modal -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 id="auth-title">Đăng Nhập Khách Hàng</h2>
+            <form id="auth-form" style="margin-top:20px;">
+                <div class="form-group">
+                    <input type="text" id="auth-username" class="form-control" placeholder="Tên đăng nhập" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="auth-password" class="form-control" placeholder="Mật khẩu" required>
+                </div>
+                <!-- Extra fields for register -->
+                <div class="form-group" id="auth-fullname-group" style="display:none;">
+                    <input type="text" id="auth-fullname" class="form-control" placeholder="Họ và tên">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width:100%; margin-bottom:15px;" id="auth-submit-btn">Đăng Nhập</button>
+                <p style="text-align:center; font-size:0.9rem; color:var(--text-muted);">
+                    <a href="#" onclick="toggleAuthMode()" id="auth-toggle-link" style="color:var(--text-main)">Chưa có tài khoản? Đăng ký ngay</a>
+                </p>
+            </form>
+            <button class="btn" style="width:100%; margin-top:10px" onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Giỏ hàng Modal -->
+    <div class="modal-overlay" id="cart-modal">
+        <div class="modal-content" style="max-width: 900px; padding: 40px;">
+            <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px;">Giỏ hàng</h2>
+                    <div id="cart-items" style="max-height: 50vh; overflow-y: auto; padding-right: 10px;"></div>
+                </div>
+                <div style="flex: 1; min-width: 300px; border-left: 1px solid var(--border-color); padding-left: 40px;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 20px;">Thanh toán</h3>
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <input type="text" id="cust-name" class="form-control" placeholder="Họ và tên" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="cust-phone" class="form-control" placeholder="Số điện thoại" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="cust-address" class="form-control" placeholder="Địa chỉ giao hàng" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="display: flex; gap: 10px;">
+                            <input type="text" id="coupon-code" class="form-control" placeholder="Mã giảm giá (VD: GIAM10)">
+                            <button type="button" class="btn" onclick="applyCoupon()">Áp dụng</button>
+                        </div>
+                        <div id="coupon-msg" style="font-size: 0.9em; margin-bottom: 15px; font-weight:600;"></div>
+
+                        <div class="form-group">
+                            <label>Phương thức thanh toán</label>
+                            <select id="payment-method" class="form-control">
+                                <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                                <option value="VNPAY">Thanh toán qua VNPAY</option>
+                            </select>
+                        </div>
+
+                        <h2 id="checkout-total" style="margin: 30px 0; font-size:2rem; letter-spacing:-1px;">Tổng: 0đ</h2>
+
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" class="btn" style="flex:1" onclick="document.getElementById('cart-modal').style.display='none'">Đóng</button>
+                            <button type="submit" class="btn btn-primary" style="flex:2; font-size:1.1rem;">Thanh Toán Ngay</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Product Details Modal -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="product-modal-content" style="max-height:90vh; overflow-y:auto; width:900px;">
+            <button class="close-btn" onclick="document.getElementById('product-modal').style.display='none'">×</button>
+            <div style="display:flex; flex-wrap:wrap;">
+                <div class="product-modal-img" style="flex:1; min-width:300px;">
+                    <img id="detail-img" src="" alt="Product">
+                </div>
+                <div class="product-modal-info" style="flex:1; min-width:300px;">
+                    <h2 id="detail-name">Product Name</h2>
+                    <div class="price" id="detail-price">0đ</div>
+                    <p id="detail-desc">Product description goes here...</p>
+                    <div class="product-modal-actions">
+                        <button class="btn btn-primary" id="detail-add-btn" style="flex:1">Thêm vào giỏ</button>
+                        <button class="btn" id="detail-buy-btn" style="flex:1; background:#000; color:#fff">Mua ngay</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews Section -->
+            <div class="reviews-section" style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <h3>Đánh Giá Sản Phẩm</h3>
+                
+                <!-- Review Form -->
+                <div class="review-form" style="background:var(--card-bg); padding:20px; border-radius:10px; margin-bottom:20px;">
+                    <h4 style="margin-bottom:15px;">Viết đánh giá của bạn</h4>
+                    <div class="form-group">
+                        <input type="text" id="review-name" class="form-control" placeholder="Tên của bạn" required>
+                    </div>
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                        <label>Đánh giá sao:</label>
+                        <div class="star-rating" id="review-stars">
+                            <span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="review-comment" class="form-control" placeholder="Sản phẩm này thế nào?..." rows="3" required></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="submit-review-btn">Gửi đánh giá</button>
+                </div>
+
+                <!-- Reviews List -->
+                <div id="reviews-list">
+                    <p style="color:var(--text-muted)">Đang tải bình luận...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Consultant Chatbot -->
+    <div id="ai-chat-btn" onclick="toggleChat()">🤖 Tư Vấn AI</div>
+    <div id="ai-chat-window">
+        <div class="chat-header">
+            <span>Trợ lý PhoneBot</span>
+            <button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer;">×</button>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="chat-msg ai-msg">Xin chào! Tôi có thể giúp bạn tìm chiếc điện thoại hoàn hảo không? Ngân sách của bạn khoảng bao nhiêu?</div>
+            <div class="chat-options" id="chat-opts-1">
+                <button onclick="aiAnswer(1, 'Dưới 15 triệu')">Dưới 15 triệu</button>
+                <button onclick="aiAnswer(1, '15 - 25 triệu')">15 - 25 triệu</button>
+                <button onclick="aiAnswer(1, 'Trên 25 triệu')">Trên 25 triệu</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Support Chat Widget (User <-> Admin) -->
+    <div id="support-chat-btn" onclick="toggleSupportChat()" style="display:none;">
+        💬 Chat với Shop
+        <span id="support-unread-badge" style="display:none; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:0.7rem; margin-left:5px;">0</span>
+    </div>
+    <div id="support-chat-window" style="display:none;">
+        <div class="chat-header" style="background: #1a1a2e;">
+            <span>💬 Chat với Shop</span>
+            <button onclick="toggleSupportChat()" style="background:none;border:none;color:white;cursor:pointer;font-size:1.2rem;">×</button>
+        </div>
+        <div class="chat-body" id="support-chat-body" style="height:300px; overflow-y:auto; padding:15px;"></div>
+        <div class="chat-input-area" style="display:flex; gap:8px; padding:10px; border-top:1px solid #333;">
+            <input type="text" id="support-input" class="form-control" placeholder="Nhắn tin..." style="flex:1;" onkeypress="if(event.key==='Enter') sendSupportMessage()">
+            <button class="btn btn-primary" onclick="sendSupportMessage()" style="padding:8px 15px;">→</button>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

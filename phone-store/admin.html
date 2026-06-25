@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="assets/css/style.css?v=4">
+    <!-- Thêm thư viện Chart.js để vẽ biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Thêm thư viện jsPDF và html2canvas để xuất PDF thật -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .modal-overlay { z-index: 2000; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .dashboard-cards { display: flex; gap: 20px; margin-bottom: 30px; }
+        .dash-card { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+    <div class="admin-sidebar">
+        <h2>Admin Panel</h2>
+        <br>
+        <ul style="list-style: none; display:flex; flex-direction:column; gap:15px;">
+            <li><a href="#" style="color:var(--text-main); text-decoration:none" onclick="switchTab('dashboard')">📊 Dashboard</a></li>
+            <li><a href="#" style="color:var(--text-main); text-decoration:none" onclick="switchTab('products')">📦 Quản lý Sản phẩm</a></li>
+            <li><a href="#" style="color:var(--text-main); text-decoration:none" onclick="switchTab('orders')">📋 Quản lý Đơn hàng</a></li>
+            <li><a href="#" id="chat-nav-link" style="color:var(--text-main); text-decoration:none" onclick="switchTab('chat')">💬 Tin nhắn <span id="admin-chat-badge" style="display:none; background:red; color:white; border-radius:50%; padding:1px 6px; font-size:0.75rem;">0</span></a></li>
+            <li><a href="index.html" style="color:var(--primary); text-decoration:none">🌐 Xem Website</a></li>
+            <li><a href="#" style="color:red; text-decoration:none" onclick="logout()">🚪 Đăng xuất</a></li>
+        </ul>
+    </div>
+
+    <div class="admin-content">
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <h2>Dashboard Doanh thu</h2>
+            <div class="dashboard-cards" style="margin-top:20px">
+                <div class="dash-card">
+                    <h3>Tổng Đơn Hàng</h3>
+                    <h2 id="total-orders-count">0</h2>
+                </div>
+                <div class="dash-card">
+                    <h3>Doanh Thu</h3>
+                    <h2 id="total-revenue" style="color:var(--primary)">0đ</h2>
+                </div>
+            </div>
+            <div style="width: 100%; max-width: 800px; background:var(--card-bg); padding: 20px; border-radius:15px">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- PRODUCTS TAB -->
+        <div id="tab-products" class="tab-content">
+            <h2>Danh sách Sản phẩm</h2>
+            <button class="btn btn-primary" style="margin-top:10px" onclick="openProductModal()">+ Thêm Sản phẩm</button>
+            <table class="table">
+                <thead>
+                    <tr><th>ID</th><th>Hình ảnh</th><th>Tên</th><th>Giá</th><th>Kho</th><th>Hành động</th></tr>
+                </thead>
+                <tbody id="admin-product-table"></tbody>
+            </table>
+        </div>
+
+        <!-- ORDERS TAB -->
+        <div id="tab-orders" class="tab-content">
+            <h2>Quản lý Đơn hàng</h2>
+            <table class="table">
+                <thead>
+                    <tr><th>ID</th><th>Khách hàng</th><th>SĐT</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th><th>Hành động</th></tr>
+                </thead>
+                <tbody id="admin-orders-table"></tbody>
+            </table>
+        </div>
+
+        <!-- CHAT TAB -->
+        <div id="tab-chat" class="tab-content">
+            <h2>Tin nhắn Khách Hàng</h2>
+            <div style="display:flex; gap:20px; margin-top:20px; height:550px;">
+                <!-- Danh sách cuộc hội thoại -->
+                <div style="width:260px; flex-shrink:0; background:var(--card-bg); border-radius:12px; overflow-y:auto; border:1px solid var(--border-color);">
+                    <div style="padding:15px; border-bottom:1px solid var(--border-color); font-weight:bold;">Danh sách hội thoại</div>
+                    <div id="conv-items">Đang tải...</div>
+                </div>
+                <!-- Khung chat -->
+                <div style="flex:1; display:flex; flex-direction:column; background:var(--card-bg); border-radius:12px; border:1px solid var(--border-color); overflow:hidden;">
+                    <div id="admin-chat-header" style="padding:15px; border-bottom:1px solid var(--border-color); font-weight:bold; color:var(--text-muted);">Chọn một cuộc hội thoại ←</div>
+                    <div id="admin-chat-body" style="flex:1; overflow-y:auto; padding:15px;"></div>
+                    <div style="display:flex; gap:8px; padding:12px; border-top:1px solid var(--border-color);">
+                        <input type="text" id="admin-chat-input" class="form-control" placeholder="Trả lời khách hàng..." onkeypress="if(event.key==='Enter') adminSendMessage()">
+                        <button class="btn btn-primary" onclick="adminSendMessage()" style="padding:8px 18px;">Gửi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Thêm Sản Phẩm</h2>
+            <form id="product-form" style="margin-top:20px">
+                <input type="hidden" id="prod-id" value="0">
+                <div class="form-group">
+                    <label>Tên điện thoại</label>
+                    <input type="text" id="prod-name" class="form-control" required>
+                </div>
+                <div class="form-group" style="display:flex; gap:10px">
+                    <div style="flex:1">
+                        <label>Hãng</label>
+                        <input type="text" id="prod-brand" class="form-control" required>
+                    </div>
+                    <div style="flex:1">
+                        <label>Giá (VND)</label>
+                        <input type="number" id="prod-price" class="form-control" required>
+                    </div>
+                    <div style="flex:1">
+                        <label>Số lượng kho</label>
+                        <input type="number" id="prod-stock" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Link Hình ảnh (hoặc Upload)</label>
+                    <input type="text" id="prod-image-url" class="form-control" placeholder="URL hình ảnh (Tùy chọn)">
+                    <input type="file" id="prod-image-file" class="form-control" style="margin-top:10px" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="prod-desc" class="form-control" rows="3"></textarea>
+                </div>
+                <div style="text-align:right">
+                    <button type="button" class="btn" onclick="document.getElementById('product-modal').style.display='none'">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js?v=4"></script>
+    <script src="assets/js/admin.js?v=4"></script>
+</body>
+</html>
